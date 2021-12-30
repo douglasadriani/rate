@@ -15,14 +15,13 @@ import javax.servlet.http.HttpServletResponse
 class RateLimitFilterInterceptor : HandlerInterceptor {
     @Autowired
     private val rateLimitService: RateLimitService? = null
-
-
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
         val apiKey :String = request.getHeader(Constants.HEADER_API_KEY)
         if (apiKey == null || apiKey.isNullOrEmpty() ) {
             response.sendError(HttpStatus.BAD_REQUEST.value(), "Missing Header: " + Constants.HEADER_API_KEY)
             return false
         }
+
         val tokenBucket = rateLimitService!!.resolveBucket(apiKey)
         val probe = tokenBucket.tryConsumeAndReturnRemaining(1)
         return if (probe.isConsumed) {
